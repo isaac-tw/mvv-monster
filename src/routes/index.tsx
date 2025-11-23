@@ -74,6 +74,23 @@ function App() {
     setDepartures(res);
   };
 
+  const renderDepartures = (departures) =>
+    departures?.map(
+      ({ departureLive, departurePlanned, line: { number, direction } }) => (
+        <div
+          key={`${number}-${direction}-${departurePlanned}`}
+          className="flex gap-5"
+        >
+          <span>
+            [{number}] {direction}
+          </span>
+          <span>
+            {departureLive} / {departurePlanned}
+          </span>
+        </div>
+      ),
+    );
+
   return (
     <div className="min-h-screen">
       <Button onClick={handleGetDepartures}>Get Departures</Button>
@@ -89,23 +106,29 @@ function App() {
           onSelect={handleStopSelect}
         />
       </div>
-      <div>
-        <h3>AvailableLines</h3>
-        {!!availableLines.length && (
-          <div className="flex items-center gap-2 mb-2">
-            <Checkbox
-              id={selectAllId}
-              checked={
-                availableLines.length > 0 &&
-                selectedLines.length === availableLines.length
-              }
-              onCheckedChange={(checked) => handleSelectAll(!!checked)}
-            />
-            <Label htmlFor={selectAllId}>Select All</Label>
+      <div className="flex">
+        <div>
+          <h3>AvailableLines</h3>
+          {!!availableLines.length && (
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox
+                id={selectAllId}
+                checked={
+                  availableLines.length > 0 &&
+                  selectedLines.length === availableLines.length
+                }
+                onCheckedChange={(checked) => handleSelectAll(!!checked)}
+              />
+              <Label htmlFor={selectAllId}>Select All</Label>
+            </div>
+          )}
+          <div className="flex flex-col gap-1">
+            {renderAvailableLines(availableLines)}
           </div>
-        )}
-        <div className="flex flex-col gap-1">
-          {renderAvailableLines(availableLines)}
+        </div>
+        <div>
+          <h3>Status</h3>
+          {renderDepartures(departures)}
         </div>
       </div>
     </div>
