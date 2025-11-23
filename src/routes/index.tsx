@@ -11,6 +11,7 @@ export const Route = createFileRoute("/")({ component: App });
 function App() {
   const [selectedStop, setSelectedStop] = useState({});
   const [availableLines, setAvailableLines] = useState([]);
+  const [selectedLines, setSelectedLines] = useState<string[]>([]);
 
   const handleSearchStops = async (query: string) => {
     if (query.length < 4) return;
@@ -25,10 +26,25 @@ function App() {
     setAvailableLines(res.lines);
   };
 
+  const handleLineClick = (lineId: string, checked: boolean) => {
+    setSelectedLines((prev) => {
+      if (checked) {
+        if (prev.includes(lineId)) return prev;
+        return [...prev, lineId];
+      }
+
+      return prev.filter((id) => id !== lineId);
+    });
+  };
+
   const renderAvailableLines = (lines) =>
     lines?.map(({ stateless, number, direction }) => (
       <div key={stateless} className="flex items-center gap-2">
-        <Checkbox id={stateless} />
+        <Checkbox
+          id={stateless}
+          checked={selectedLines.includes(stateless)}
+          onCheckedChange={(checked) => handleLineClick(stateless, !!checked)}
+        />
         <Label htmlFor={stateless}>
           [{number}] {direction}
         </Label>
