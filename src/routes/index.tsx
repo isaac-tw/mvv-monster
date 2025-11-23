@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Autocomplete } from "@/components/Autocomplete";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +13,8 @@ function App() {
   const [availableLines, setAvailableLines] = useState([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
 
+  const selectAllId = useId();
+
   const handleSearchStops = async (query: string) => {
     if (query.length < 4) return;
     const res = await mvvApi.searchStops(query);
@@ -24,6 +26,16 @@ function App() {
 
     const res = await mvvApi.getAvailableLines(item.id);
     setAvailableLines(res.lines);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const ids = (availableLines || []).map((line) => line.stateless);
+      setSelectedLines(ids);
+      return;
+    }
+
+    setSelectedLines([]);
   };
 
   const handleLineClick = (lineId: string, checked: boolean) => {
@@ -65,8 +77,24 @@ function App() {
           onSelect={handleStopSelect}
         />
       </div>
-      <div className="flex flex-col gap-1">
-        {renderAvailableLines(availableLines)}
+      <div>
+        <h3>AvailableLines</h3>
+        {!!availableLines.length && (
+          <div className="flex items-center gap-2 mb-2">
+            <Checkbox
+              id={selectAllId}
+              checked={
+                availableLines.length > 0 &&
+                selectedLines.length === availableLines.length
+              }
+              onCheckedChange={(checked) => handleSelectAll(!!checked)}
+            />
+            <Label htmlFor={selectAllId}>Select All</Label>
+          </div>
+        )}
+        <div className="flex flex-col gap-1">
+          {renderAvailableLines(availableLines)}
+        </div>
       </div>
     </div>
   );
