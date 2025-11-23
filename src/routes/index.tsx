@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useId, useState } from "react";
 
 import { Autocomplete } from "@/components/Autocomplete";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { mvvApi } from "@/services/mvv-service";
@@ -12,6 +13,7 @@ function App() {
   const [selectedStop, setSelectedStop] = useState({});
   const [availableLines, setAvailableLines] = useState([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
+  const [departures, setDepartures] = useState([]);
 
   const selectAllId = useId();
 
@@ -63,8 +65,18 @@ function App() {
       </div>
     ));
 
+  const handleGetDepartures = async (e) => {
+    const res = await mvvApi.getDeparturesWithDelays(
+      selectedStop.id,
+      selectedLines,
+    );
+
+    setDepartures(res);
+  };
+
   return (
     <div className="min-h-screen">
+      <Button onClick={handleGetDepartures}>Get Departures</Button>
       <div>
         Please specify a maximum of three stops.
         <Autocomplete
