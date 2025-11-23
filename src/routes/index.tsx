@@ -85,7 +85,22 @@ function App() {
             [{number}] {direction}
           </span>
           <span>
-            {departureLive} / {departurePlanned}
+            <time dateTime={departurePlanned}>{departurePlanned}</time>
+            {departureLive && (
+              <>
+                &nbsp;/&nbsp;
+                <time
+                  dateTime={departureLive}
+                  className={
+                    departureLive === departurePlanned
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }
+                >
+                  {departureLive}
+                </time>
+              </>
+            )}
           </span>
         </div>
       ),
