@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { XIcon } from "lucide-react";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Autocomplete } from "@/components/Autocomplete";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,17 @@ function App() {
   const [savedSelections, setSavedSelections] = useState([]);
 
   const selectAllId = useId();
+
+  useEffect(() => {
+    try {
+      const storedSelections = localStorage.getItem("mvv.savedSelections");
+      if (!storedSelections) return;
+      const parsed = JSON.parse(storedSelections);
+      if (Array.isArray(parsed)) setSavedSelections(parsed);
+    } catch (err) {
+      console.warn("Failed to load saved selections", err);
+    }
+  }, []);
 
   const removeSavedSelection = (id) => {
     const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
