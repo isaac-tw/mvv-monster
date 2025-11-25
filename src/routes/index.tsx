@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { XIcon } from "lucide-react";
 import { useId, useState } from "react";
 
 import { Autocomplete } from "@/components/Autocomplete";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -17,6 +19,33 @@ function App() {
   const [savedSelections, setSavedSelections] = useState([]);
 
   const selectAllId = useId();
+
+  const removeSavedSelection = (id) => {
+    const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
+    setSavedSelections(updatedSelections);
+    localStorage.setItem("mvv.savedSelections", JSON.stringify(updatedSelections));
+  };
+
+  const renderSavedSelections = (selections) =>
+    selections?.map(({
+      id,
+      stop: { name },
+      lines
+    }) => (
+      <div key={id}>
+        <Badge>
+          {name}
+          <Button
+            variant="secondary"
+            size="icon-xs"
+            className="rounded-full"
+            onClick={() => removeSavedSelection(id)}
+          >
+            <XIcon />
+          </Button>
+        </Badge>
+      </div>
+  ));
 
   const handleSearchStops = async (query: string) => {
     if (query.length < 4) return;
@@ -170,6 +199,9 @@ function App() {
 
   return (
     <div className="min-h-screen">
+      <div>
+        {renderSavedSelections(savedSelections)}
+      </div>
       <div className="flex items-center gap-2 mt-2">
         <Button onClick={handleGetDepartures}>Get Departures</Button>
         <Button
