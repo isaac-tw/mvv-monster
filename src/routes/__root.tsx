@@ -4,6 +4,7 @@ import {
   HeadContent,
   Scripts,
 } from '@tanstack/react-router'
+import { AppDialog } from '@/components/dialog/AppDialog'
 import Header from '../components/Header'
 import appCss from '../styles.css?url'
 
@@ -45,6 +46,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <Header />
         {children}
+        <AppDialog />
         <Scripts />
       </body>
     </html>
