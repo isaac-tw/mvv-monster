@@ -13,18 +13,30 @@ export const Route = createFileRoute("/")({ component: App });
 function App() {
   const { openDialog } = useDialogStore();
 
-  const [departures, setDepartures] = useState([]);
+  const [departuresByStation, setDeparturesByStation] = useState([]);
   const [savedSelections, setSavedSelections] = useState([]);
 
   useEffect(() => {
-    try {
-      const storedSelections = localStorage.getItem("mvv.savedSelections");
-      if (!storedSelections) return;
-      const parsed = JSON.parse(storedSelections);
-      if (Array.isArray(parsed)) setSavedSelections(parsed);
-    } catch (err) {
-      console.warn("Failed to load saved selections", err);
-    }
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const storedSelections = localStorage.getItem("mvv.savedSelections");
+        if (!storedSelections) return;
+        const parsedSelections = JSON.parse(storedSelections);
+        if (!Array.isArray(parsedSelections)) return;
+        setSavedSelections(parsedSelections);
+
+        const results = await Promise.all(parsedSelections.map(({ id, lines }) => mvvApi.getDeparturesWithDelays(id, lines)));
+
+        if (!cancelled) { setDeparturesByStation(results) }
+      } catch (err) {
+        console.warn("Failed to load saved selections", err);
+      }
+    };
+
+    load();
+    return () => { cancelled = true };
   }, []);
 
   const removeSavedSelection = (id) => {
@@ -50,46 +62,41 @@ function App() {
       </div>
     ));
 
-  const handleGetDepartures = async (e) => {
-    // const res = await mvvApi.getDeparturesWithDelays(
-    //   selectedStop.id,
-    //   selectedLines,
-    // );
-
-    // setDepartures(res);
-  };
-
-  const renderDepartures = (departures) =>
-    departures?.map(
-      ({ departureLive, departurePlanned, line: { number, direction } }) => (
-        <div
-          key={`${number}-${direction}-${departurePlanned}`}
-          className="flex gap-5"
-        >
-          <span>
-            [{number}] {direction}
-          </span>
-          <span>
-            <time dateTime={departurePlanned}>{departurePlanned}</time>
-            {departureLive && (
-              <>
-                &nbsp;/&nbsp;
-                <time
-                  dateTime={departureLive}
-                  className={
-                    departureLive === departurePlanned
-                      ? "text-green-600"
-                      : "text-red-500"
-                  }
-                >
-                  {departureLive}
-                </time>
-              </>
-            )}
-          </span>
-        </div>
-      ),
-    );
+  const renderDeparturesByStation = (departuresByStation) =>
+    departuresByStation.map((departures) => (
+      <div key={departures.id}>
+        {departures?.map(
+          ({ departureLive, departurePlanned, line: { number, direction } }) => (
+            <div
+              key={`${number}-${direction}-${departurePlanned}`}
+              className="flex gap-5"
+            >
+              <span>
+                [{number}] {direction}
+              </span>
+              <span>
+                <time dateTime={departurePlanned}>{departurePlanned}</time>
+                {departureLive && (
+                  <>
+                    &nbsp;/&nbsp;
+                    <time
+                      dateTime={departureLive}
+                      className={
+                        departureLive === departurePlanned
+                          ? "text-green-600"
+                          : "text-red-500"
+                      }
+                    >
+                      {departureLive}
+                    </time>
+                  </>
+                )}
+              </span>
+            </div>
+          ),
+        )}
+      </div>
+    ));
 
   return (
     <div className="min-h-screen">
@@ -102,14 +109,15 @@ function App() {
         >
           ADD
         </Button>
-        <Button onClick={handleGetDepartures}>Get Departures</Button>
         <div className="text-sm text-muted">
           Saved: {savedSelections.length}
         </div>
       </div>
       <div>
         <h3>Status</h3>
-        {renderDepartures(departures)}
+        <div className="flex flex-col gap-4">
+          {renderDeparturesByStation(departuresByStation)}
+        </div>
       </div>
     </div>
   );
