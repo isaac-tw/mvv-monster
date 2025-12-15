@@ -80,7 +80,8 @@ function App() {
 
   const renderDeparturesByStation = (departuresByStation) =>
     departuresByStation.map((departures) => (
-      <div key={departures.id}>
+      <div key={departures?.[0].station.id}>
+        <b>{departures?.[0].station.name}</b>
         {departures?.map(
           ({ departureLive, departurePlanned, line: { number, direction } }) => (
             <div
