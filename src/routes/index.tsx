@@ -82,7 +82,7 @@ function App() {
     departuresByStation.map((departures) => (
       <div key={departures?.[0].station.id}>
         <b>{departures?.[0].station.name}</b>
-        {departures?.map(
+        {departures?.slice(0, 10).map(
           ({ departureLive, departurePlanned, line: { number, direction } }) => (
             <div
               key={`${number}-${direction}-${departurePlanned}`}
