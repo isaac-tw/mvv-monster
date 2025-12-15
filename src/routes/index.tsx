@@ -15,6 +15,7 @@ function App() {
 
   const [departuresByStation, setDeparturesByStation] = useState([]);
   const [savedSelections, setSavedSelections] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     try {
@@ -36,7 +37,10 @@ function App() {
     const fetchDepartures = async () => {
       try {
         const results = await Promise.all(savedSelections.map(({ id, lines }) => mvvApi.getDeparturesWithDelays(id, lines)));
-        if (!cancelled) setDeparturesByStation(results);
+        if (!cancelled) {
+          setDeparturesByStation(results);
+          setLastUpdated(new Date());
+        }
       } catch (err) {
         console.warn("Failed to fetch departures", err);
       }
@@ -127,6 +131,8 @@ function App() {
       </div>
       <div>
         <h3>Status</h3>
+        {lastUpdated && (<div>Last updated: {lastUpdated.toLocaleString()}</div>)}
+        <hr />
         <div className="flex flex-col gap-4">
           {renderDeparturesByStation(departuresByStation)}
         </div>
