@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { mvvApi } from "@/services/mvv-service";
+import { useDialogStore } from "@/store/dialogStore";
 
 export function SearchDialog() {
   const [selectedStop, setSelectedStop] = useState({});
   const [availableLines, setAvailableLines] = useState([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
   const selectAllId = useId();
+  const { closeDialog } = useDialogStore();
 
   const handleSearchStops = async (query: string) => {
     if (query.length < 4) return;
@@ -121,6 +123,7 @@ export function SearchDialog() {
         JSON.stringify(updatedSelections),
       );
       // setSavedSelections(updatedSelections);
+      closeDialog();
     } catch (err) {
       console.error("Failed to save selection", err);
     }
