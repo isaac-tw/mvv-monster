@@ -17,27 +17,34 @@ function App() {
   const [savedSelections, setSavedSelections] = useState([]);
 
   useEffect(() => {
+    try {
+      const storedSelections = localStorage.getItem("mvv.savedSelections");
+      if (!storedSelections) return;
+
+      const parsed = JSON.parse(storedSelections);
+      if (!Array.isArray(parsed)) return;
+      setSavedSelections(parsed);
+    } catch (err) {
+      console.warn("Failed to load saved selections", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!savedSelections.length) return;
+
     let cancelled = false;
-
-    const load = async () => {
+    const fetchDepartures = async () => {
       try {
-        const storedSelections = localStorage.getItem("mvv.savedSelections");
-        if (!storedSelections) return;
-        const parsedSelections = JSON.parse(storedSelections);
-        if (!Array.isArray(parsedSelections)) return;
-        setSavedSelections(parsedSelections);
-
-        const results = await Promise.all(parsedSelections.map(({ id, lines }) => mvvApi.getDeparturesWithDelays(id, lines)));
-
-        if (!cancelled) { setDeparturesByStation(results) }
+        const results = await Promise.all(savedSelections.map(({ id, lines }) => mvvApi.getDeparturesWithDelays(id, lines)));
+        if (!cancelled) setDeparturesByStation(results);
       } catch (err) {
-        console.warn("Failed to load saved selections", err);
+        console.warn("Failed to fetch departures", err);
       }
     };
 
-    load();
+    fetchDepartures();
     return () => { cancelled = true };
-  }, []);
+  }, [savedSelections]);
 
   const removeSavedSelection = (id) => {
     const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
