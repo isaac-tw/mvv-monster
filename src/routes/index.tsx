@@ -43,7 +43,12 @@ function App() {
     };
 
     fetchDepartures();
-    return () => { cancelled = true };
+    const intervalId = setInterval(fetchDepartures, 30 * 1000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
   }, [savedSelections]);
 
   const removeSavedSelection = (id) => {
