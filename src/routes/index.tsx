@@ -78,40 +78,68 @@ function App() {
       </div>
     ));
 
+  const groupDeparturesByLine = (departures) => {
+    const lineMap = new Map();
+
+    for (const departure of departures) {
+      const lineId = departure.line.stateless;
+
+      if (!lineMap.has(lineId)) {
+        lineMap.set(lineId, {
+          id: lineId,
+          departures: [],
+        });
+      }
+      lineMap.get(lineId).departures.push(departure);
+    }
+    return Array.from(lineMap.values());
+  };
+
+  const renderDepartureGroups = ({ id, departures }) => (
+    <div key={id}>
+      <p className="text-gray-500">{departures?.[0].line.direction}</p>
+      {departures.map(
+        ({ departureLive, departurePlanned, line: { number, direction } }) => (
+          <div
+            key={`${number}-${direction}-${departurePlanned}`}
+            className="flex gap-5"
+          >
+            <span>
+              [{number}] {direction}
+            </span>
+            <span>
+              <time dateTime={departurePlanned}>{departurePlanned}</time>
+              {departureLive && (
+                <>
+                  &nbsp;/&nbsp;
+                  <time
+                    dateTime={departureLive}
+                    className={
+                      departureLive === departurePlanned
+                        ? "text-green-600"
+                        : "text-red-500"
+                    }
+                  >
+                    {departureLive}
+                  </time>
+                </>
+              )}
+            </span>
+          </div>
+        ),
+      )}
+    </div>
+  );
+
   const renderDeparturesByStation = (departuresByStation) =>
     departuresByStation.map((departures) => (
       <div key={departures?.[0].station.id}>
         <b>{departures?.[0].station.name}</b>
-        {departures?.slice(0, 10).map(
-          ({ departureLive, departurePlanned, line: { number, direction } }) => (
-            <div
-              key={`${number}-${direction}-${departurePlanned}`}
-              className="flex gap-5"
-            >
-              <span>
-                [{number}] {direction}
-              </span>
-              <span>
-                <time dateTime={departurePlanned}>{departurePlanned}</time>
-                {departureLive && (
-                  <>
-                    &nbsp;/&nbsp;
-                    <time
-                      dateTime={departureLive}
-                      className={
-                        departureLive === departurePlanned
-                          ? "text-green-600"
-                          : "text-red-500"
-                      }
-                    >
-                      {departureLive}
-                    </time>
-                  </>
-                )}
-              </span>
-            </div>
-          ),
-        )}
+        <div className="flex flex-col gap-2">
+          {groupDeparturesByLine(departures.slice(0, 10)).map(
+            (departureGroups) => renderDepartureGroups(departureGroups),
+          )}
+        </div>
       </div>
     ));
 
