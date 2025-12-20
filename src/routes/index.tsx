@@ -97,16 +97,15 @@ function App() {
 
   const renderDepartureGroups = ({ id, departures }) => (
     <div key={id}>
-      <p className="text-gray-500">{departures?.[0].line.direction}</p>
+      <p className="text-gray-500 font-semibold">
+        [{departures?.[0].line.number}] {departures?.[0].line.direction}
+      </p>
       {departures.map(
         ({ departureLive, departurePlanned, line: { number, direction } }) => (
           <div
             key={`${number}-${direction}-${departurePlanned}`}
             className="flex gap-5"
           >
-            <span>
-              [{number}] {direction}
-            </span>
             <span>
               <time dateTime={departurePlanned}>{departurePlanned}</time>
               {departureLive && (
