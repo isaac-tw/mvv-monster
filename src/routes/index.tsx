@@ -140,8 +140,8 @@ function App() {
 
   const renderDeparturesByStation = (departuresByStation: Departure[][]): ReactNode =>
     departuresByStation.map((departures) => (
-      <div key={departures?.[0].station.id}>
-        <b>{departures?.[0].station.name}</b>
+      <div key={departures?.[0]?.station.id}>
+        <b>{departures?.[0]?.station.name}</b>
         <div className="flex flex-col gap-2">
           {groupDeparturesByLine(departures.slice(0, 10)).map(
             (departureGroups) => renderDepartureGroups(departureGroups),
