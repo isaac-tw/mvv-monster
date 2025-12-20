@@ -5,7 +5,6 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { AppDialog } from '@/components/dialog/AppDialog'
-import Header from '../components/Header'
 import appCss from '../styles.css?url'
 
 interface MyRouterContext {
@@ -44,7 +43,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <Header />
         {children}
         <AppDialog />
         <Scripts />
