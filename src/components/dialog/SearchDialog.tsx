@@ -106,6 +106,7 @@ export function SearchDialog() {
           JSON.stringify(updatedSelections),
         );
         // setSavedSelections(updatedSelections);
+        closeDialog();
         return;
       }
 
