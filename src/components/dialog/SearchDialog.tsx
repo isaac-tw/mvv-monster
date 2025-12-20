@@ -3,23 +3,25 @@ import { Autocomplete } from "@/components/Autocomplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { mvvApi } from "@/services/mvv-service";
+import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 
+type SaveLines = 'all' | string[];
+
 export function SearchDialog() {
-  const [selectedStop, setSelectedStop] = useState({});
-  const [availableLines, setAvailableLines] = useState([]);
+  const [selectedStop, setSelectedStop] = useState<LocationResult | null>(null);
+  const [availableLines, setAvailableLines] = useState<LineInfo[]>([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
   const selectAllId = useId();
   const { closeDialog } = useDialogStore();
 
-  const handleSearchStops = async (query: string) => {
-    if (query.length < 4) return;
+  const handleSearchStops = async (query: string): Promise<LocationResult[]> => {
+    if (query.length < 4) return [];
     const res = await mvvApi.searchStops(query);
     return res.results;
   };
 
-  const handleStopSelect = async (item) => {
+  const handleStopSelect = async (item: LocationResult): Promise<void> => {
     setSelectedStop(item);
 
     const res = await mvvApi.getAvailableLines(item.id);
@@ -47,7 +49,7 @@ export function SearchDialog() {
     });
   };
 
-  const renderAvailableLines = (lines) =>
+  const renderAvailableLines = (lines: LineInfo[]) =>
     lines?.map(({ stateless, number, direction }) => (
       <div key={stateless} className="flex items-center gap-2">
         <Checkbox
@@ -78,7 +80,7 @@ export function SearchDialog() {
         ? existing.findIndex((stop) => stop.id === selectedStop.id)
         : -1;
 
-      const isSameLines = (linesA, linesB) => {
+      const isSameLines = (linesA: SaveLines, linesB: SaveLines): boolean => {
         if (linesA === "all" && linesB === "all") return true;
         if (Array.isArray(linesA) && Array.isArray(linesB)) {
           if (linesA.length !== linesB.length) return false;
