@@ -39,14 +39,7 @@ export function SearchDialog() {
   };
 
   const handleLineClick = (lineId: string, checked: boolean) => {
-    setSelectedLines((prev) => {
-      if (checked) {
-        if (prev.includes(lineId)) return prev;
-        return [...prev, lineId];
-      }
-
-      return prev.filter((id) => id !== lineId);
-    });
+    setSelectedLines((prev) => checked ? [...prev, lineId] : prev.filter((id) => id !== lineId));
   };
 
   const renderAvailableLines = (lines: LineInfo[]) =>
