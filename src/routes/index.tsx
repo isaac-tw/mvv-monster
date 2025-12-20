@@ -1,21 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { XIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mvvApi } from "@/services/mvv-service";
+import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
+
+interface SavedSelection {
+  id: string;
+  stop: { id: string; name: string };
+  lines: string | string[];
+  savedAt: string;
+}
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const { openDialog } = useDialogStore();
 
-  const [departuresByStation, setDeparturesByStation] = useState([]);
-  const [savedSelections, setSavedSelections] = useState([]);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [departuresByStation, setDeparturesByStation] = useState<Departure[][]>([]);
+  const [savedSelections, setSavedSelections] = useState<SavedSelection[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     try {
@@ -55,13 +62,13 @@ function App() {
     };
   }, [savedSelections]);
 
-  const removeSavedSelection = (id) => {
+  const removeSavedSelection = (id: string): void => {
     const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
     setSavedSelections(updatedSelections);
     localStorage.setItem("mvv.savedSelections", JSON.stringify(updatedSelections));
   };
 
-  const renderSavedSelections = (selections) =>
+  const renderSavedSelections = (selections: SavedSelection[]): ReactNode =>
     selections?.map(({ id, stop: { name } }) => (
       <div key={id}>
         <Badge>
@@ -78,8 +85,8 @@ function App() {
       </div>
     ));
 
-  const groupDeparturesByLine = (departures) => {
-    const lineMap = new Map();
+  const groupDeparturesByLine = (departures: Departure[]): Array<{ id: string; departures: Departure[] }> => {
+    const lineMap = new Map<string, { id: string; departures: Departure[] }>();
 
     for (const departure of departures) {
       const lineId = departure.line.stateless;
@@ -90,12 +97,13 @@ function App() {
           departures: [],
         });
       }
-      lineMap.get(lineId).departures.push(departure);
+      const lineGroup = lineMap.get(lineId);
+      if (lineGroup) lineGroup.departures.push(departure);
     }
     return Array.from(lineMap.values());
   };
 
-  const renderDepartureGroups = ({ id, departures }) => (
+  const renderDepartureGroups = ({ id, departures }: { id: string; departures: Departure[] }): ReactNode => (
     <div key={id}>
       <p className="text-gray-500 font-semibold">
         [{departures?.[0].line.number}] {departures?.[0].line.direction}
@@ -130,7 +138,7 @@ function App() {
     </div>
   );
 
-  const renderDeparturesByStation = (departuresByStation) =>
+  const renderDeparturesByStation = (departuresByStation: Departure[][]): ReactNode =>
     departuresByStation.map((departures) => (
       <div key={departures?.[0].station.id}>
         <b>{departures?.[0].station.name}</b>
