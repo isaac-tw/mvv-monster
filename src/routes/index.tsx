@@ -50,7 +50,6 @@ function App() {
   const removeSavedSelection = (id: string): void => {
     const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
     setSavedSelections(updatedSelections);
-    localStorage.setItem("mvv.savedSelections", JSON.stringify(updatedSelections));
   };
 
   const renderSavedSelections = (selections: SavedSelection[]): ReactNode =>
