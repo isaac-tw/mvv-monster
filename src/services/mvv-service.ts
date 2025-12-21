@@ -94,10 +94,10 @@ export interface Notification {
  * Encode line identifiers for MVV API
  * Handles percent encoding and base64 encoding
  */
-export function encodeLines(lineIds: string[]): string {
-  const queryString = lineIds
-    .map(id => `&line=${encodeURIComponent(id)}`)
-    .join('');
+export function encodeLines(lineIds: 'all' | string[]): string {
+  const queryString = lineIds === 'all'
+    ? '&line=all'
+    : lineIds.map(id => `&line=${encodeURIComponent(id)}`).join('');
   return btoa(queryString);
 }
 
@@ -327,7 +327,7 @@ export class MvvApiService {
    */
   async getDepartures(
     stopId: string,
-    lineIds: string[],
+    lineIds: 'all' | string[],
     timestamp?: number
   ): Promise<DeparturesResponse> {
     const encodedLines = encodeLines(lineIds);
@@ -377,7 +377,7 @@ export class MvvApiService {
    */
   async getDeparturesIn(
     stopId: string,
-    lineIds: string[],
+    lineIds: 'all' | string[],
     minutes: number
   ): Promise<DeparturesResponse> {
     const timestamp = getTimestampInMinutes(minutes);
@@ -389,7 +389,7 @@ export class MvvApiService {
    */
   async getDeparturesAt(
     stopId: string,
-    lineIds: string[],
+    lineIds: 'all' | string[],
     date: Date
   ): Promise<DeparturesResponse> {
     const timestamp = dateToTimestamp(date);
@@ -405,7 +405,7 @@ export class MvvApiService {
    */
   async getDelayedDepartures(
     stopId: string,
-    lineIds: string[],
+    lineIds: 'all' | string[],
     timestamp?: number
   ): Promise<Departure[]> {
     const response = await this.getDepartures(stopId, lineIds, timestamp);
@@ -417,7 +417,7 @@ export class MvvApiService {
    */
   async getDeparturesWithDelays(
     stopId: string,
-    lineIds: string[],
+    lineIds: 'all' | string[],
     timestamp?: number
   ): Promise<Array<Departure & { delayMinutes: number }>> {
     const response = await this.getDepartures(stopId, lineIds, timestamp);
@@ -435,7 +435,7 @@ export class MvvApiService {
    */
   async getNextDepartures(
     stopId: string,
-    lineIds: string[],
+    lineIds: 'all' | string[],
     count: number
   ): Promise<Departure[]> {
     const response = await this.getDepartures(stopId, lineIds);
