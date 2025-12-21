@@ -3,16 +3,23 @@ import { Autocomplete } from "@/components/Autocomplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { getLineIdFromStateless } from "@/lib/utils";
 import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
-import type { SaveLines } from "@/types/storage";
+import type { SavedSelection, SaveLines } from "@/types/storage";
 
 export function SearchDialog() {
+  const selectAllId = useId();
+  const { closeDialog } = useDialogStore();
+  const [savedSelections, _] = useLocalStorage<SavedSelection[]>(
+    "mvv.savedSelections",
+    [],
+  );
+
   const [selectedStop, setSelectedStop] = useState<LocationResult | null>(null);
   const [availableLines, setAvailableLines] = useState<LineInfo[]>([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
-  const selectAllId = useId();
-  const { closeDialog } = useDialogStore();
 
   const handleSearchStops = async (query: string): Promise<LocationResult[]> => {
     if (query.length < 4) return [];
@@ -23,8 +30,13 @@ export function SearchDialog() {
   const handleStopSelect = async (item: LocationResult): Promise<void> => {
     setSelectedStop(item);
 
-    const res = await mvvApi.getAvailableLines(item.id); 
+    const res = await mvvApi.getAvailableLines(item.id);
     setAvailableLines(res.lines);
+
+    const foundSelection = savedSelections.find((selection) => selection.id === item?.id);
+    if (!foundSelection) return;
+    if (foundSelection.lines === "all") handleSelectAll(true);
+    else setSelectedLines(foundSelection.lines);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -37,8 +49,17 @@ export function SearchDialog() {
     setSelectedLines([]);
   };
 
+  // The stateless ID changed today for some lines (only the last part differs).
+  // e.g. "swm:03134:G:H:015" -> "swm:03134:G:H:016"
+  // However, the departures response appears unaffected by this change.
+  // We now ignore the last part (using getLineIdFromStateless) when rendering checkboxes
+  // to prevent them from appearing unchecked due to the ID change.
   const handleLineClick = (lineId: string, checked: boolean) => {
-    setSelectedLines((prev) => checked ? [...prev, lineId] : prev.filter((id) => id !== lineId));
+    setSelectedLines((prev) =>
+      checked
+        ? [...prev, lineId]
+        : prev.filter((id) => getLineIdFromStateless(id) !== getLineIdFromStateless(lineId))
+    );
   };
 
   const renderAvailableLines = (lines: LineInfo[]) =>
@@ -46,7 +67,10 @@ export function SearchDialog() {
       <div key={stateless} className="flex items-center gap-2">
         <Checkbox
           id={stateless}
-          checked={selectedLines.includes(stateless)}
+          checked={selectedLines
+            .map((id) => getLineIdFromStateless(id))
+            .includes(getLineIdFromStateless(stateless))
+          }
           onCheckedChange={(checked) => handleLineClick(stateless, !!checked)}
         />
         <Label htmlFor={stateless}>
