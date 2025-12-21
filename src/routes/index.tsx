@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 
@@ -19,23 +20,13 @@ export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const { openDialog } = useDialogStore();
+  const [savedSelections, setSavedSelections] = useLocalStorage<SavedSelection[]>(
+    "mvv.savedSelections",
+    []
+  );
 
   const [departuresByStation, setDeparturesByStation] = useState<Departure[][]>([]);
-  const [savedSelections, setSavedSelections] = useState<SavedSelection[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-  useEffect(() => {
-    try {
-      const storedSelections = localStorage.getItem("mvv.savedSelections");
-      if (!storedSelections) return;
-
-      const parsed = JSON.parse(storedSelections);
-      if (!Array.isArray(parsed)) return;
-      setSavedSelections(parsed);
-    } catch (err) {
-      console.warn("Failed to load saved selections", err);
-    }
-  }, []);
 
   useEffect(() => {
     if (!savedSelections.length) return;
