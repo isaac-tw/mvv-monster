@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
-
-interface SavedSelection {
-  id: string;
-  stop: { id: string; name: string };
-  lines: string | string[];
-  savedAt: string;
-}
+import type { SavedSelection } from "@/types/storage";
 
 export const Route = createFileRoute("/")({ component: App });
 

@@ -5,8 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
-
-type SaveLines = 'all' | string[];
+import type { SaveLines } from "@/types/storage";
 
 export function SearchDialog() {
   const [selectedStop, setSelectedStop] = useState<LocationResult | null>(null);
@@ -24,7 +23,7 @@ export function SearchDialog() {
   const handleStopSelect = async (item: LocationResult): Promise<void> => {
     setSelectedStop(item);
 
-    const res = await mvvApi.getAvailableLines(item.id);
+    const res = await mvvApi.getAvailableLines(item.id); 
     setAvailableLines(res.lines);
   };
 
