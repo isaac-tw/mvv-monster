@@ -12,7 +12,7 @@ import type { SavedSelection, SaveLines } from "@/types/storage";
 export function SearchDialog() {
   const selectAllId = useId();
   const { closeDialog } = useDialogStore();
-  const [savedSelections, _] = useLocalStorage<SavedSelection[]>(
+  const [savedSelections, setSavedSelections] = useLocalStorage<SavedSelection[]>(
     "mvv.savedSelections",
     [],
   );
@@ -89,12 +89,7 @@ export function SearchDialog() {
           ? "all"
           : selectedLines;
 
-      const storedSelections = localStorage.getItem("mvv.savedSelections");
-      const existing = storedSelections ? JSON.parse(storedSelections) : [];
-
-      const idx = Array.isArray(existing)
-        ? existing.findIndex((stop) => stop.id === selectedStop.id)
-        : -1;
+      const idx = savedSelections.findIndex((stop) => stop.id === selectedStop.id);
 
       const isSameLines = (linesA: SaveLines, linesB: SaveLines): boolean => {
         if (linesA === "all" && linesB === "all") return true;
@@ -108,7 +103,7 @@ export function SearchDialog() {
 
       if (idx !== -1) {
         // existing saved stop found
-        const existingEntry = existing[idx];
+        const existingEntry = savedSelections[idx];
         if (isSameLines(existingEntry.lines, linesToSave)) return;
 
         // update entry
@@ -116,14 +111,11 @@ export function SearchDialog() {
           ...existingEntry,
           lines: linesToSave,
           savedAt: new Date().toISOString(),
-        };
-        const updatedSelections = [...existing];
+        } as const;
+        const updatedSelections = [...savedSelections];
         updatedSelections[idx] = updated;
-        localStorage.setItem(
-          "mvv.savedSelections",
-          JSON.stringify(updatedSelections),
-        );
-        // setSavedSelections(updatedSelections);
+
+        setSavedSelections(updatedSelections);
         closeDialog();
         return;
       }
@@ -134,14 +126,11 @@ export function SearchDialog() {
         stop: selectedStop,
         lines: linesToSave,
         savedAt: new Date().toISOString(),
-      };
+      } as const;
 
-      const updatedSelections = [...existing, payload];
-      localStorage.setItem(
-        "mvv.savedSelections",
-        JSON.stringify(updatedSelections),
-      );
-      // setSavedSelections(updatedSelections);
+      const updatedSelections = [...savedSelections, payload];
+
+      setSavedSelections(updatedSelections);
       closeDialog();
     } catch (err) {
       console.error("Failed to save selection", err);
