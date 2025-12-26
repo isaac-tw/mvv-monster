@@ -98,24 +98,22 @@ function App() {
             key={`${number}-${direction}-${departurePlanned}`}
             className="flex gap-5"
           >
-            <span>
-              <time dateTime={departurePlanned}>{departurePlanned}</time>
-              {departureLive && (
-                <>
-                  &nbsp;/&nbsp;
-                  <time
-                    dateTime={departureLive}
-                    className={
-                      departureLive === departurePlanned
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }
-                  >
-                    {departureLive}
-                  </time>
-                </>
-              )}
-            </span>
+            {departureLive && (
+              <span>
+                <time dateTime={departurePlanned}>{departurePlanned}</time>
+                &nbsp;/&nbsp;
+                <time
+                  dateTime={departureLive}
+                  className={
+                    departureLive === departurePlanned
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }
+                >
+                  {departureLive}
+                </time>
+              </span>
+            )}
           </div>
         ),
       )}
@@ -127,7 +125,7 @@ function App() {
       <div key={departures?.[0]?.station.id}>
         <b>{departures?.[0]?.station.name}</b>
         <div className="flex flex-col gap-2">
-          {groupDeparturesByLine(departures.slice(0, 10)).map(
+          {groupDeparturesByLine(departures.slice(0, 20)).map(
             (departureGroups) => renderDepartureGroups(departureGroups),
           )}
         </div>
