@@ -3,19 +3,16 @@ import { Autocomplete } from "@/components/Autocomplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { getLineIdFromStateless } from "@/lib/utils";
 import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
-import type { SavedSelection, SaveLines } from "@/types/storage";
+import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
+import type { SaveLines } from "@/types/storage";
 
 export function SearchDialog() {
   const selectAllId = useId();
   const { closeDialog } = useDialogStore();
-  const [savedSelections, setSavedSelections] = useLocalStorage<SavedSelection[]>(
-    "mvv.savedSelections",
-    [],
-  );
+  const { savedSelections, setSavedSelections } = useSavedSelectionsStore();
 
   const [selectedStop, setSelectedStop] = useState<LocationResult | null>(null);
   const [availableLines, setAvailableLines] = useState<LineInfo[]>([]);

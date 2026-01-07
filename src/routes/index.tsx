@@ -5,19 +5,15 @@ import { type ReactNode, useEffect, useState } from "react";
 import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
-import type { SavedSelection } from "@/types/storage";
+import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const { openDialog } = useDialogStore();
-  const [savedSelections, setSavedSelections] = useLocalStorage<SavedSelection[]>(
-    "mvv.savedSelections",
-    []
-  );
+  const { savedSelections, setSavedSelections } = useSavedSelectionsStore();
 
   const [departuresByStation, setDeparturesByStation] = useState<Departure[][]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
