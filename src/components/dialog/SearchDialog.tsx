@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { Autocomplete } from "@/components/Autocomplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,11 +18,14 @@ export function SearchDialog() {
   const [availableLines, setAvailableLines] = useState<LineInfo[]>([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
 
-  const handleSearchStops = async (query: string): Promise<LocationResult[]> => {
-    if (query.length < 4) return [];
-    const res = await mvvApi.searchStops(query);
-    return res.results;
-  };
+  const handleSearchStops = useCallback(
+    async (query: string): Promise<LocationResult[]> => {
+      if (query.length < 4) return [];
+      const res = await mvvApi.searchStops(query);
+      return res.results;
+    },
+    [],
+  );
 
   const handleStopSelect = async (item: LocationResult): Promise<void> => {
     setSelectedStop(item);
