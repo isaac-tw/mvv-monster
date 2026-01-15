@@ -89,7 +89,7 @@ function App() {
       <p className="text-gray-500 font-semibold">
         [{departures?.[0].line.number}] {departures?.[0].line.direction}
       </p>
-      {departures.map(
+      {departures.slice(0, 5).map(
         ({ departureLive, departurePlanned, line: { number, direction } }) => (
           <div
             key={`${number}-${direction}-${departurePlanned}`}
@@ -122,7 +122,7 @@ function App() {
       <div key={departures?.[0]?.station.id}>
         <b>{departures?.[0]?.station.name}</b>
         <div className="flex flex-col gap-2">
-          {groupDeparturesByLine(departures.slice(0, 20)).map(
+          {groupDeparturesByLine(departures).map(
             (departureGroups) => renderDepartureGroups(departureGroups),
           )}
         </div>
