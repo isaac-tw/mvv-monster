@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
+import type { SavedSelection } from "@/types/storage";
 
 export const Route = createFileRoute("/")({ component: App });
 
