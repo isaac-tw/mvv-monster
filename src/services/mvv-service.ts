@@ -49,15 +49,18 @@ export interface LineInfo {
   name: TransitMode;
 }
 
-export type TransitMode = 
-  | 'Bus'
-  | 'MetroBus'
-  | 'NachtBus'
-  | 'ExpressBus'
-  | 'Tram'
-  | 'NightTram'
-  | 'U-Bahn'
-  | 'S-Bahn';
+export type TransitMode =
+  | "S-Bahn"
+  | "U-Bahn"
+  | "Tram"
+  | "NachtTram"
+  | "MetroBus"
+  | "Bus"
+  | "ExpressBus"
+  | "NachtBus"
+  | "FLEXlinie"
+  | "SEV"
+  | "Regionalzug";
 
 export interface DeparturesResponse {
   error: string;
