@@ -3,6 +3,7 @@ import { Autocomplete } from "@/components/Autocomplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { getLineColors } from "@/lib/line-colors";
 import { getLineIdFromStateless } from "@/lib/utils";
 import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
@@ -63,21 +64,32 @@ export function SearchDialog() {
   };
 
   const renderAvailableLines = (lines: LineInfo[]) =>
-    lines?.map(({ stateless, number, direction }) => (
-      <div key={stateless} className="flex items-center gap-2">
-        <Checkbox
-          id={stateless}
-          checked={selectedLines
-            .map((id) => getLineIdFromStateless(id))
-            .includes(getLineIdFromStateless(stateless))
-          }
-          onCheckedChange={(checked) => handleLineClick(stateless, !!checked)}
-        />
-        <Label htmlFor={stateless}>
-          [{number}] {direction}
-        </Label>
-      </div>
-    ));
+    lines?.map((line) => {
+      const { stateless, number, direction } = line;
+      return (
+        <div key={stateless} className="flex items-center gap-2">
+          <Checkbox
+            id={stateless}
+            checked={selectedLines
+              .map((id) => getLineIdFromStateless(id))
+              .includes(getLineIdFromStateless(stateless))}
+            onCheckedChange={(checked) => handleLineClick(stateless, !!checked)}
+          />
+          <Label htmlFor={stateless}>
+            <span
+              className="font-bold rounded-xs px-1.5"
+              style={{
+                backgroundColor: getLineColors(line).background,
+                color: getLineColors(line).text,
+              }}
+            >
+              {number}
+            </span>
+            {direction}
+          </Label>
+        </div>
+      );
+    });
 
   const saveSelection = () => {
     try {

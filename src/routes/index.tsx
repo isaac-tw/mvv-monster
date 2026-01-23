@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getLineColors } from "@/lib/line-colors";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
@@ -87,7 +88,16 @@ function App() {
   const renderDepartureGroups = ({ id, departures }: { id: string; departures: Departure[] }): ReactNode => (
     <div key={id}>
       <p className="text-gray-500 font-semibold">
-        [{departures?.[0].line.number}] {departures?.[0].line.direction}
+        <span
+          className="font-bold rounded-xs px-1.5 mr-1"
+          style={{
+            backgroundColor: getLineColors(departures?.[0].line).background,
+            color: getLineColors(departures?.[0].line).text,
+          }}
+        >
+          {departures?.[0].line.number}
+        </span>
+        {departures?.[0].line.direction}
       </p>
       {departures.slice(0, 5).map(
         ({ departureLive, departurePlanned, line: { number, direction } }) => (
