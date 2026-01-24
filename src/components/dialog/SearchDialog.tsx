@@ -150,28 +150,17 @@ export function SearchDialog() {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-6">
+      <Autocomplete
+        placeholder="Search Stop..."
+        debounceTime={300}
+        minChars={1}
+        fetchData={handleSearchStops}
+        renderItem={(item) => item.name}
+        getItemValue={(item) => item.name}
+        onSelect={handleStopSelect}
+      />
       <div>
-        Please specify a maximum of three stops.
-        <Autocomplete
-          placeholder="Search Stop..."
-          debounceTime={300}
-          minChars={1}
-          fetchData={handleSearchStops}
-          renderItem={(item) => item.name}
-          getItemValue={(item) => item.name}
-          onSelect={handleStopSelect}
-        />
-        <Button
-          type="button"
-          onClick={saveSelection}
-          disabled={!(selectedStop?.id && selectedLines.length)}
-        >
-          Save Selection
-        </Button>
-      </div>
-      <div>
-        <h3>AvailableLines</h3>
         {!!availableLines.length && (
           <div className="flex items-center gap-2 mb-2">
             <Checkbox
@@ -185,10 +174,25 @@ export function SearchDialog() {
             <Label htmlFor={selectAllId}>Select All</Label>
           </div>
         )}
-        <div className="flex flex-col gap-1">
-          {renderAvailableLines(availableLines)}
-        </div>
+        {availableLines.length === 0
+          ? (
+            <div className="text-sm text-gray-500 text-center py-12 bg-gray-50 rounded-lg">
+              Search for a stop to see available lines
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {renderAvailableLines(availableLines)}
+            </div>
+          )}
       </div>
+      <Button
+        className="w-full"
+        type="button"
+        onClick={saveSelection}
+        disabled={!(selectedStop?.id && selectedLines.length)}
+      >
+        Save Selection
+      </Button>
     </div>
   );
 }
