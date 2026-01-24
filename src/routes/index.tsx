@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { XIcon } from "lucide-react";
+import { Clock, Plus, XIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { SearchDialog } from "@/components/dialog/SearchDialog";
@@ -53,7 +53,7 @@ function App() {
   const renderSavedSelections = (selections: SavedSelection[]): ReactNode =>
     selections?.map(({ id, stop: { name } }) => (
       <div key={id}>
-        <Badge>
+        <Badge className="flex gap-2 px-2 py-1">
           {name}
           <Button
             variant="secondary"
@@ -140,27 +140,29 @@ function App() {
     ));
 
   return (
-    <div className="min-h-screen">
-      <div>{renderSavedSelections(savedSelections)}</div>
-      <div className="flex items-center gap-2 mt-2">
+    <div className="min-h-screen max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-gray-900">Departures Today</h1>
+      <div className="flex flex-wrap gap-2 my-4">
+        {renderSavedSelections(savedSelections)}
+      </div>
+      <div className="flex items-center justify-between gap-2 mt-2">
         <Button
           onClick={() => {
             openDialog(<SearchDialog />, "Add New Route");
           }}
         >
-          ADD
+          <Plus /> ADD ROUTE
         </Button>
-        <div className="text-sm text-muted">
-          Saved: {savedSelections.length}
-        </div>
+        {lastUpdated && (
+          <div className="flex items-center gap-1 text-sm">
+            <Clock size={16} />
+            Updated: {lastUpdated.toLocaleTimeString()}
+          </div>
+        )}
       </div>
-      <div>
-        <h3>Status</h3>
-        {lastUpdated && (<div>Last updated: {lastUpdated.toLocaleString()}</div>)}
-        <hr />
-        <div className="flex flex-col gap-4">
-          {renderDeparturesByStation(departuresByStation)}
-        </div>
+      <hr className="my-2" />
+      <div className="flex flex-col gap-4">
+        {renderDeparturesByStation(departuresByStation)}
       </div>
     </div>
   );
