@@ -77,7 +77,7 @@ export function SearchDialog() {
           />
           <Label htmlFor={stateless}>
             <span
-              className="font-bold rounded-xs px-1.5"
+              className="font-bold rounded px-1.5 py-0.5 text-sm"
               style={{
                 backgroundColor: getLineColors(line).background,
                 color: getLineColors(line).text,
@@ -85,7 +85,7 @@ export function SearchDialog() {
             >
               {number}
             </span>
-            {direction}
+            <span className="text-sm text-gray-700">{direction}</span>
           </Label>
         </div>
       );
@@ -185,7 +185,7 @@ export function SearchDialog() {
               Search for a stop to see available lines
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 max-h-[50vh] overflow-y-auto">
               {renderAvailableLines(availableLines)}
             </div>
           )}
