@@ -162,16 +162,21 @@ export function SearchDialog() {
       />
       <div>
         {!!availableLines.length && (
-          <div className="flex items-center gap-2 mb-2">
-            <Checkbox
-              id={selectAllId}
-              checked={
-                availableLines.length > 0 &&
-                selectedLines.length === availableLines.length
-              }
-              onCheckedChange={(checked) => handleSelectAll(!!checked)}
-            />
-            <Label htmlFor={selectAllId}>Select All</Label>
+          <div className="mb-2 border-b">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              Available Lines
+            </h3>
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox
+                id={selectAllId}
+                checked={
+                  availableLines.length > 0 &&
+                  selectedLines.length === availableLines.length
+                }
+                onCheckedChange={(checked) => handleSelectAll(!!checked)}
+              />
+              <Label htmlFor={selectAllId}>Select All</Label>
+            </div>
           </div>
         )}
         {availableLines.length === 0
