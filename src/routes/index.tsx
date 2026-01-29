@@ -87,9 +87,9 @@ function App() {
 
   const renderDepartureGroups = ({ id, departures }: { id: string; departures: Departure[] }): ReactNode => (
     <div key={id}>
-      <p className="text-gray-500 font-semibold">
+      <div className="text-gray-500 font-semibold mb-2">
         <span
-          className="font-bold rounded-xs px-1.5 mr-1"
+          className="text-sm font-bold px-2 py-1 rounded mr-1"
           style={{
             backgroundColor: getLineColors(departures?.[0].line).background,
             color: getLineColors(departures?.[0].line).text,
@@ -97,8 +97,10 @@ function App() {
         >
           {departures?.[0].line.number}
         </span>
-        {departures?.[0].line.direction}
-      </p>
+        <span className="font-medium text-gray-700">
+          {departures?.[0].line.direction}
+        </span>
+      </div>
       {departures.slice(0, 5).map(
         ({ departureLive, departurePlanned, line: { number, direction } }) => (
           <div
@@ -129,9 +131,14 @@ function App() {
 
   const renderDeparturesByStation = (departuresByStation: Departure[][]): ReactNode =>
     departuresByStation.map((departures) => (
-      <div key={departures?.[0]?.station.id}>
-        <b>{departures?.[0]?.station.name}</b>
-        <div className="flex flex-col gap-2">
+      <div
+        className="border-b border-gray-20 bg-white rounded-lg shadow"
+        key={departures?.[0]?.station.id}
+      >
+        <h2 className="text-lg font-bold text-gray-900 border-b border-gray-200 px-6 py-4">
+          {departures?.[0]?.station.name}
+        </h2>
+        <div className="flex flex-col gap-3 p-6">
           {groupDeparturesByLine(departures).map(
             (departureGroups) => renderDepartureGroups(departureGroups),
           )}
@@ -145,8 +152,9 @@ function App() {
       <div className="flex flex-wrap gap-2 my-4">
         {renderSavedSelections(savedSelections)}
       </div>
-      <div className="flex items-center justify-between gap-2 mt-2">
+      <div className="flex items-center justify-between gap-2 mt-2 mb-4">
         <Button
+          className="bg-blue-600 hover:bg-blue-700"
           onClick={() => {
             openDialog(<SearchDialog />, "Add New Route");
           }}
@@ -160,7 +168,6 @@ function App() {
           </div>
         )}
       </div>
-      <hr className="my-2" />
       <div className="flex flex-col gap-4">
         {renderDeparturesByStation(departuresByStation)}
       </div>
