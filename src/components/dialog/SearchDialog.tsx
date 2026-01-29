@@ -181,7 +181,7 @@ export function SearchDialog() {
         )}
         {availableLines.length === 0
           ? (
-            <div className="text-sm text-gray-500 text-center py-12 bg-gray-50 rounded-lg">
+            <div className="text-sm text-gray-500 text-center py-36 bg-gray-50 rounded-lg">
               Search for a stop to see available lines
             </div>
           ) : (
