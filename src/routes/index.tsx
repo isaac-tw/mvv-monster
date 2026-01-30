@@ -13,6 +13,13 @@ import type { SavedSelection } from "@/types/storage";
 
 export const Route = createFileRoute("/")({ component: App });
 
+const calculateDelay = (planned: string, live: string) => {
+  if (planned === live) return 0;
+  const [pH, pM] = planned.split(':').map(Number);
+  const [lH, lM] = live.split(':').map(Number);
+  return (lH * 60 + lM) - (pH * 60 + pM);
+};
+
 function App() {
   const { openDialog } = useDialogStore();
   const { savedSelections, setSavedSelections } = useSavedSelectionsStore();
@@ -101,31 +108,29 @@ function App() {
           {departures?.[0].line.direction}
         </span>
       </div>
-      {departures.slice(0, 5).map(
-        ({ departureLive, departurePlanned, line: { number, direction } }) => (
-          <div
-            key={`${number}-${direction}-${departurePlanned}`}
-            className="flex gap-5"
-          >
-            {departureLive && (
-              <span>
-                <time dateTime={departurePlanned}>{departurePlanned}</time>
-                &nbsp;/&nbsp;
-                <time
-                  dateTime={departureLive}
-                  className={
-                    departureLive === departurePlanned
-                      ? "text-green-600"
-                      : "text-red-500"
-                  }
-                >
-                  {departureLive}
-                </time>
-              </span>
-            )}
-          </div>
-        ),
-      )}
+      <div className="flex flex-col gap-1 ml-0.5">
+        {departures.slice(0, 5).map(
+          ({ departureLive, departurePlanned, line: { number, direction } }) => {
+            const delay = calculateDelay(departurePlanned, departureLive);
+            return (
+              <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
+                {delay > 0 ? (
+                  <>
+                    <span className="line-through text-gray-400">{departurePlanned}</span>
+                    <span className="text-red-600 font-semibold">{departureLive}</span>
+                    <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">+{delay} min</span>
+                  </>
+                ) : (
+                  <span className="text-green-700 font-semibold flex items-center gap-2">
+                    {departureLive}
+                    <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">On time</span>
+                  </span>
+                )}
+              </div>
+            );
+          },
+        )}
+      </div>
     </div>
   );
 
