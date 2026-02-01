@@ -111,6 +111,14 @@ function App() {
       <div className="flex flex-col gap-1 ml-0.5">
         {departures.slice(0, 5).map(
           ({ departureLive, departurePlanned, line: { number, direction } }) => {
+            if (departureLive === "Halt entfällt") {
+              return (
+                <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
+                  <span className="text-red-600 font-semibold">{departureLive}</span>
+                </div>
+              );
+            }
+
             const delay = calculateDelay(departurePlanned, departureLive);
             return (
               <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
