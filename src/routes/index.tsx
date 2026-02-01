@@ -111,6 +111,7 @@ function App() {
       <div className="flex flex-col gap-1 ml-0.5">
         {departures.slice(0, 5).map(
           ({ departureLive, departurePlanned, line: { number, direction } }) => {
+            if (!departureLive) return null;
             if (departureLive === "Halt entfällt") {
               return (
                 <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
