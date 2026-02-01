@@ -1,6 +1,6 @@
 {
-  "short_name": "TanStack App",
-  "name": "Create TanStack App Sample",
+  "short_name": "MVV Monster",
+  "name": "A real-time departure tracking application for Munich's public transportation system",
   "icons": [
     {
       "src": "favicon.ico",
