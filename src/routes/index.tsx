@@ -160,6 +160,8 @@ function App() {
       </div>
     ));
 
+  const isAddRouteDisabled = savedSelections.length === 0 || savedSelections.length >= 3;
+
   return (
     <div className="min-h-screen max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold text-gray-900">Departures Today</h1>
@@ -167,14 +169,20 @@ function App() {
         {renderSavedSelections(savedSelections)}
       </div>
       <div className="flex items-center justify-between gap-2 mt-2 mb-4">
-        <Button
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={() => {
-            openDialog(<SearchDialog />, "Add New Route");
-          }}
-        >
-          <Plus /> ADD ROUTE
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={isAddRouteDisabled}
+            onClick={() => {
+              openDialog(<SearchDialog />, "Add New Route");
+            }}
+          >
+            <Plus /> ADD ROUTE
+          </Button>
+          {isAddRouteDisabled && (
+            <p className="text-sm text-gray-500 ml-3">Maximum of 3 saved stops reached.</p>
+          )}
+        </div>
         {lastUpdated && (
           <div className="flex items-center gap-1 text-sm">
             <Clock size={16} />
