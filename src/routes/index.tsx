@@ -115,7 +115,8 @@ function App() {
             if (departureLive === "Halt entfällt") {
               return (
                 <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
-                  <span className="text-red-600 font-semibold">{departureLive}</span>
+                  <span className="line-through text-gray-400">{departurePlanned}</span>
+                  <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">{departureLive}</span>
                 </div>
               );
             }
