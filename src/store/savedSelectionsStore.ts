@@ -5,6 +5,7 @@ import type { SavedSelection } from "@/types/storage";
 type SavedSelectionsState = {
   savedSelections: SavedSelection[];
   setSavedSelections: (selections: SavedSelection[]) => void;
+  isLoading: boolean;
 };
 
 export const useSavedSelectionsStore = create<SavedSelectionsState>()(
@@ -12,9 +13,13 @@ export const useSavedSelectionsStore = create<SavedSelectionsState>()(
     (set) => ({
       savedSelections: [],
       setSavedSelections: (selections) => set({ savedSelections: selections }),
+      isLoading: true,
     }),
     {
       name: "mvv.savedSelections",
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isLoading = false;
+      },
     }
   )
 );
