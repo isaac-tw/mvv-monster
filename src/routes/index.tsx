@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock, Plus, XIcon } from "lucide-react";
+import { Clock, Plus, RefreshCw, XIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { SearchDialog } from "@/components/dialog/SearchDialog";
@@ -186,9 +186,15 @@ function App() {
           )}
         </div>
         {lastUpdated && (
-          <div className="flex items-center gap-1 text-sm">
-            <Clock size={16} />
-            Updated: {lastUpdated.toLocaleTimeString()}
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              <Clock size={16} />
+              Updated: {lastUpdated.toLocaleTimeString()}
+            </div>
+            <div className="flex items-center gap-1">
+              <RefreshCw size={16} />
+              Auto-refresh: 30s
+            </div>
           </div>
         )}
       </div>
