@@ -167,10 +167,10 @@ function App() {
       <div className="flex flex-wrap gap-2 my-4">
         {renderSavedSelections(savedSelections)}
       </div>
-      <div className="flex items-center justify-between gap-2 mt-2 mb-4">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-2 mt-2 mb-4">
+        <div className="flex flex-col sm:flex-row items-center gap-1">
           <Button
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
             disabled={isLoading || savedSelections.length >= 3}
             onClick={() => {
               openDialog(<SearchDialog />, "Add New Route");
