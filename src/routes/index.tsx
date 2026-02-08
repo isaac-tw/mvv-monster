@@ -6,19 +6,13 @@ import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLineColors } from "@/lib/line-colors";
+import { calculateDelay } from "@/lib/utils";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
 import type { SavedSelection } from "@/types/storage";
 
 export const Route = createFileRoute("/")({ component: App });
-
-const calculateDelay = (planned: string, live: string) => {
-  if (planned === live) return 0;
-  const [pH, pM] = planned.split(':').map(Number);
-  const [lH, lM] = live.split(':').map(Number);
-  return (lH * 60 + lM) - (pH * 60 + pM);
-};
 
 function App() {
   const { openDialog } = useDialogStore();
