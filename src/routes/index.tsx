@@ -86,6 +86,43 @@ function App() {
     return Array.from(lineMap.values());
   };
 
+  const renderDepartures = ({ departureLive, departurePlanned, line: { number, direction } }: Departure) => {
+    if (departureLive === "Halt entfällt") {
+      return (
+        <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
+          <span className="line-through text-gray-400">{departurePlanned}</span>
+          <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">{departureLive}</span>
+        </div>
+      );
+    }
+
+    const delay = departureLive ? calculateDelay(departurePlanned, departureLive) : null;
+    return (
+      <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
+        {delay === null
+          ? (
+              <span className="text-green-700 font-semibold flex items-center gap-2">
+                {departurePlanned || "-"}
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">TBD</span>
+              </span>
+          ) : delay > 0
+            ? (
+              <>
+                <span className="line-through text-gray-400">{departurePlanned}</span>
+                <span className="text-red-600 font-semibold">{departureLive}</span>
+                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">+{delay} min</span>
+              </>
+            ) : (
+              <span className="text-green-700 font-semibold flex items-center gap-2">
+                {departureLive}
+                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">On time</span>
+              </span>
+            )
+          }
+      </div>
+    );
+  }
+
   const renderDepartureGroups = ({ id, departures }: { id: string; departures: Departure[] }): ReactNode => (
     <div key={id}>
       <div className="text-gray-500 font-semibold mb-2">
@@ -103,37 +140,12 @@ function App() {
         </span>
       </div>
       <div className="flex flex-col gap-1 ml-0.5">
-        {departures.slice(0, 5).map(
-          ({ departureLive, departurePlanned, line: { number, direction } }) => {
-            if (!departureLive) return null;
-            if (departureLive === "Halt entfällt") {
-              return (
-                <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
-                  <span className="line-through text-gray-400">{departurePlanned}</span>
-                  <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">{departureLive}</span>
-                </div>
-              );
-            }
-
-            const delay = calculateDelay(departurePlanned, departureLive);
-            return (
-              <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
-                {delay > 0 ? (
-                  <>
-                    <span className="line-through text-gray-400">{departurePlanned}</span>
-                    <span className="text-red-600 font-semibold">{departureLive}</span>
-                    <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">+{delay} min</span>
-                  </>
-                ) : (
-                  <span className="text-green-700 font-semibold flex items-center gap-2">
-                    {departureLive}
-                    <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">On time</span>
-                  </span>
-                )}
-              </div>
-            );
-          },
-        )}
+        {departures
+          .values()
+          .map(renderDepartures)
+          .take(5)
+          .toArray()
+        }
       </div>
     </div>
   );
