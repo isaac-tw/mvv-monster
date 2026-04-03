@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { Autocomplete } from "@/components/Autocomplete";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,9 +8,13 @@ import { getLineIdFromStateless } from "@/lib/utils";
 import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
-import type { SaveLines } from "@/types/storage";
+import type { SavedSelection, SaveLines } from "@/types/storage";
 
-export function SearchDialog() {
+type SearchDialogProps = {
+  initialSelection?: SavedSelection;
+};
+
+export function SearchDialog({ initialSelection }: SearchDialogProps) {
   const selectAllId = useId();
   const { closeDialog, setDialogTitle } = useDialogStore();
   const { savedSelections, setSavedSelections } = useSavedSelectionsStore();
@@ -18,6 +22,7 @@ export function SearchDialog() {
   const [selectedStop, setSelectedStop] = useState<LocationResult | null>(null);
   const [availableLines, setAvailableLines] = useState<LineInfo[]>([]);
   const [selectedLines, setSelectedLines] = useState<string[]>([]);
+  const [isLoadingLines, setIsLoadingLines] = useState(false);
 
   const handleSearchStops = useCallback(
     async (query: string): Promise<LocationResult[]> => {
@@ -28,20 +33,45 @@ export function SearchDialog() {
     [],
   );
 
+  const loadStopLines = useCallback(
+    async (item: LocationResult): Promise<void> => {
+      setSelectedStop(item);
+      setIsLoadingLines(true);
+
+      try {
+        const res = await mvvApi.getAvailableLines(item.id);
+        setAvailableLines(res.lines);
+
+        const foundSelection = savedSelections.find((selection) => selection.id === item?.id);
+        if (!foundSelection) {
+          setDialogTitle("Add New Route");
+          setSelectedLines([]);
+          return;
+        }
+
+        // If the selected stop has already been saved
+        setDialogTitle("Edit Route");
+        setSelectedLines(
+          foundSelection.lines === "all"
+            ? res.lines.map((line) => line.stateless)
+            : foundSelection.lines,
+        );
+      // Handle errors
+      } finally {
+        setIsLoadingLines(false);
+      }
+    },
+    [savedSelections, setDialogTitle],
+  );
+
   const handleStopSelect = async (item: LocationResult): Promise<void> => {
-    setSelectedStop(item);
-
-    const res = await mvvApi.getAvailableLines(item.id);
-    setAvailableLines(res.lines);
-
-    const foundSelection = savedSelections.find((selection) => selection.id === item?.id);
-    if (!foundSelection) return;
-    
-    // If the selected stop has already been saved
-    setDialogTitle("Edit Route");
-    if (foundSelection.lines === "all") handleSelectAll(true);
-    else setSelectedLines(foundSelection.lines);
+    await loadStopLines(item);
   };
+
+  useEffect(() => {
+    if (!initialSelection) return;
+    void loadStopLines(initialSelection.stop);
+  }, [initialSelection, loadStopLines]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -154,15 +184,26 @@ export function SearchDialog() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Autocomplete
-        placeholder="Search Stop..."
-        debounceTime={300}
-        minChars={1}
-        fetchData={handleSearchStops}
-        renderItem={(item) => item.name}
-        getItemValue={(item) => item.name}
-        onSelect={handleStopSelect}
-      />
+      {initialSelection ? (
+        <div className="rounded-lg border bg-gray-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Stop
+          </p>
+          <p className="text-sm font-medium text-gray-900">
+            {initialSelection.stop.name}
+          </p>
+        </div>
+      ) : (
+        <Autocomplete
+          placeholder="Search Stop..."
+          debounceTime={300}
+          minChars={1}
+          fetchData={handleSearchStops}
+          renderItem={(item) => item.name}
+          getItemValue={(item) => item.name}
+          onSelect={handleStopSelect}
+        />
+      )}
       <div>
         {!!availableLines.length && (
           <div className="mb-2 border-b">
@@ -182,24 +223,27 @@ export function SearchDialog() {
             </div>
           </div>
         )}
-        {availableLines.length === 0
-          ? (
-            <div className="text-sm text-gray-500 text-center py-36 bg-gray-50 rounded-lg">
-              Search for a stop to see available lines
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 max-h-[50vh] overflow-y-auto">
-              {renderAvailableLines(availableLines)}
-            </div>
-          )}
+        {availableLines.length === 0 ? (
+          <div className="text-sm text-gray-500 text-center py-36 bg-gray-50 rounded-lg">
+            {isLoadingLines
+              ? "Loading available lines..."
+              : initialSelection
+                ? "No available lines for this stop"
+                : "Search for a stop to see available lines"}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1 max-h-[50vh] overflow-y-auto">
+            {renderAvailableLines(availableLines)}
+          </div>
+        )}
       </div>
       <Button
         className="w-full"
         type="button"
         onClick={saveSelection}
-        disabled={!(selectedStop?.id && selectedLines.length)}
+        disabled={isLoadingLines || !(selectedStop?.id && selectedLines.length)}
       >
-        Save Selection
+        {initialSelection ? "Update Route" : "Save Selection"}
       </Button>
     </div>
   );
