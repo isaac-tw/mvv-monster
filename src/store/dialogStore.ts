@@ -6,6 +6,7 @@ type DialogState = {
   component: ReactNode | null;
   title: string | null;
   openDialog: (component: ReactNode, title?: string | null) => void;
+  setDialogTitle: (title: string | null) => void;
   closeDialog: () => void;
 };
 
@@ -14,5 +15,6 @@ export const useDialogStore = create<DialogState>((set) => ({
   component: null,
   title: null,
   openDialog: (component, title = null) => set({ isOpen: true, component, title }),
+  setDialogTitle: (title) => set({ title }),
   closeDialog: () => set({ isOpen: false, component: null, title: null }),
 }));
