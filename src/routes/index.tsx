@@ -51,16 +51,26 @@ function App() {
     setSavedSelections(updatedSelections);
   };
 
-  const renderSavedSelections = (selections: SavedSelection[]): ReactNode =>
-    selections?.map(({ id, stop: { name } }) => (
-      <div key={id}>
-        <Badge className="flex gap-2 px-2 py-1">
-          {name}
+  const editSavedSelection = (selection: SavedSelection): void => {
+    openDialog(<SearchDialog initialSelection={selection} />, "Edit Route");
+  };
+
+  const renderSavedSelections = (selections: SavedSelection[]): ReactNode => 
+    selections?.map((selection) => (
+      <div key={selection.id}>
+        <Badge
+          className="flex cursor-pointer gap-2 px-2 py-1"
+          onClick={() => editSavedSelection(selection)}
+        >
+          {selection.stop.name}
           <Button
             variant="secondary"
             size="icon-xs"
             className="rounded-full"
-            onClick={() => removeSavedSelection(id)}
+            onClick={(event) => {
+              event.stopPropagation();
+              removeSavedSelection(selection.id);
+            }}
           >
             <XIcon />
           </Button>
@@ -121,7 +131,7 @@ function App() {
           }
       </div>
     );
-  }
+  };
 
   const renderDepartureGroups = ({ id, departures }: { id: string; departures: Departure[] }): ReactNode => (
     <div key={id}>
