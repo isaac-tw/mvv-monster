@@ -12,7 +12,7 @@ import type { SaveLines } from "@/types/storage";
 
 export function SearchDialog() {
   const selectAllId = useId();
-  const { closeDialog } = useDialogStore();
+  const { closeDialog, setDialogTitle } = useDialogStore();
   const { savedSelections, setSavedSelections } = useSavedSelectionsStore();
 
   const [selectedStop, setSelectedStop] = useState<LocationResult | null>(null);
@@ -36,6 +36,9 @@ export function SearchDialog() {
 
     const foundSelection = savedSelections.find((selection) => selection.id === item?.id);
     if (!foundSelection) return;
+    
+    // If the selected stop has already been saved
+    setDialogTitle("Edit Route");
     if (foundSelection.lines === "all") handleSelectAll(true);
     else setSelectedLines(foundSelection.lines);
   };
