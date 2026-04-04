@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Clock, Plus, RefreshCw, XIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
+import { RemoveSavedSelectionDialog } from "@/components/dialog/RemoveSavedSelectionDialog";
 import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,16 @@ function App() {
     setSavedSelections(updatedSelections);
   };
 
+  const confirmRemoveSavedSelection = (selection: SavedSelection): void => {
+    openDialog(
+      <RemoveSavedSelectionDialog
+        stopName={selection.stop.name}
+        onConfirm={() => removeSavedSelection(selection.id)}
+      />,
+      "Remove Route",
+    );
+  };
+
   const editSavedSelection = (selection: SavedSelection): void => {
     openDialog(<SearchDialog initialSelection={selection} />, "Edit Route");
   };
@@ -70,7 +81,7 @@ function App() {
             className="rounded-full"
             onClick={(event) => {
               event.stopPropagation();
-              removeSavedSelection(selection.id);
+              confirmRemoveSavedSelection(selection);
             }}
           >
             <XIcon />
