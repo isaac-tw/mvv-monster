@@ -1,9 +1,25 @@
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock, Plus, RefreshCw, XIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { RemoveSavedSelectionDialog } from "@/components/dialog/RemoveSavedSelectionDialog";
 import { SearchDialog } from "@/components/dialog/SearchDialog";
+import { SortableStationCard } from "@/components/SortableStationCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLineColors } from "@/lib/line-colors";
@@ -46,6 +62,17 @@ function App() {
       clearInterval(intervalId);
     };
   }, [savedSelections]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const removeSavedSelection = (id: string): void => {
     const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
@@ -171,22 +198,47 @@ function App() {
     </div>
   );
 
-  const renderDeparturesByStation = (departuresByStation: Departure[][]): ReactNode =>
-    departuresByStation.map((departures) => (
-      <div
-        className="border-b border-gray-20 bg-white rounded-lg shadow"
-        key={departures?.[0]?.station.id}
-      >
-        <h2 className="text-lg font-bold text-gray-900 border-b border-gray-200 px-6 py-4">
-          {departures?.[0]?.station.name}
-        </h2>
-        <div className="flex flex-col gap-3 p-6">
-          {groupDeparturesByLine(departures).map(
-            (departureGroups) => renderDepartureGroups(departureGroups),
+  const renderDeparturesByStation = (selections: SavedSelection[]): ReactNode =>
+    selections.map((selection, index) => {
+      const departures = departuresByStation[index] ?? [];
+
+      return (
+        <SortableStationCard
+          key={selection.id}
+          selection={selection}
+          stationName={departures?.[0]?.station.name ?? selection.stop.name}
+          isSortingEnabled={selections.length > 1}
+        >
+          {departures.length > 0 ? (
+            groupDeparturesByLine(departures).map((departureGroups) =>
+              renderDepartureGroups(departureGroups),
+            )
+          ) : (
+            <p className="text-sm text-gray-500">Loading departures...</p>
           )}
-        </div>
-      </div>
-    ));
+        </SortableStationCard>
+      );
+    });
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = savedSelections.findIndex(
+      (selection) => selection.id === active.id,
+    );
+    const newIndex = savedSelections.findIndex(
+      (selection) => selection.id === over.id,
+    );
+
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    setSavedSelections(arrayMove(savedSelections, oldIndex, newIndex));
+    setDeparturesByStation((current) =>
+      oldIndex < current.length && newIndex < current.length
+        ? arrayMove(current, oldIndex, newIndex)
+        : current,
+    );
+  };
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto p-4">
@@ -225,9 +277,20 @@ function App() {
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-4">
-        {renderDeparturesByStation(departuresByStation)}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={savedSelections.map((selection) => selection.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex flex-col gap-4">
+            {renderDeparturesByStation(savedSelections)}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
