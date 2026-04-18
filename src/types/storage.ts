@@ -6,5 +6,6 @@ export interface SavedSelection {
   id: string;
   stop: LocationResult;
   lines: SaveLines;
+  lineOrder?: string[];
   savedAt: string;
 }

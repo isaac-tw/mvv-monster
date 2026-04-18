@@ -10,6 +10,7 @@ type SortableStationCardProps = {
   stationName: string;
   isSortingEnabled: boolean;
   selection: SavedSelection;
+  sortableId: string;
 };
 
 export function SortableStationCard({
@@ -17,6 +18,7 @@ export function SortableStationCard({
   stationName,
   isSortingEnabled,
   selection,
+  sortableId,
 }: SortableStationCardProps) {
   const {
     attributes,
@@ -26,7 +28,14 @@ export function SortableStationCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: selection.id });
+  } = useSortable({
+    id: sortableId,
+    data: {
+      type: "station",
+      stationId: selection.id,
+    },
+    disabled: !isSortingEnabled,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),

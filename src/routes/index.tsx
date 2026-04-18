@@ -11,10 +11,12 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock, Plus, RefreshCw, XIcon } from "lucide-react";
+import { Clock, GripVertical, Plus, RefreshCw, XIcon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { RemoveSavedSelectionDialog } from "@/components/dialog/RemoveSavedSelectionDialog";
@@ -23,7 +25,7 @@ import { SortableStationCard } from "@/components/SortableStationCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLineColors } from "@/lib/line-colors";
-import { calculateDelay } from "@/lib/utils";
+import { calculateDelay, getLineIdFromStateless } from "@/lib/utils";
 import { type Departure, mvvApi } from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
@@ -31,20 +33,101 @@ import type { SavedSelection } from "@/types/storage";
 
 export const Route = createFileRoute("/")({ component: App });
 
+type DepartureGroup = {
+  id: string;
+  departures: Departure[];
+};
+
+type SortableDepartureGroupProps = {
+  group: DepartureGroup;
+  stationId: string;
+  children: ReactNode;
+  isSortingEnabled: boolean;
+};
+
+function SortableDepartureGroup({
+  group,
+  stationId,
+  children,
+  isSortingEnabled,
+}: SortableDepartureGroupProps) {
+  const sortableId = `line:${stationId}:${group.id}`;
+  const {
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId,
+    data: {
+      type: "line-group",
+      stationId,
+      lineId: group.id,
+    },
+    disabled: !isSortingEnabled,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={isDragging ? "opacity-70" : ""}
+    >
+      <div className="flex items-start gap-2">
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          className="mt-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md cursor-grab touch-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-default disabled:opacity-40 active:cursor-grabbing"
+          disabled={!isSortingEnabled}
+          aria-label={`Reorder line ${group.departures?.[0]?.line.number}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={16} />
+        </button>
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const { openDialog } = useDialogStore();
-  const { savedSelections, setSavedSelections, isLoading } = useSavedSelectionsStore();
+  const { savedSelections, setSavedSelections, isLoading } =
+    useSavedSelectionsStore();
 
-  const [departuresByStation, setDeparturesByStation] = useState<Departure[][]>([]);
+  const [departuresByStation, setDeparturesByStation] = useState<Departure[][]>(
+    [],
+  );
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const departuresFetchSnapshot = savedSelections.map(({ id, lines }) => ({
+    id,
+    lines,
+  }));
+  const departuresFetchKey = JSON.stringify(departuresFetchSnapshot);
 
   useEffect(() => {
-    if (!savedSelections.length) return;
+    const departuresFetchSelections = JSON.parse(departuresFetchKey) as Array<{
+      id: string;
+      lines: SavedSelection["lines"];
+    }>;
+
+    if (!departuresFetchSelections.length) return;
 
     let cancelled = false;
     const fetchDepartures = async () => {
       try {
-        const results = await Promise.all(savedSelections.map(({ id, lines }) => mvvApi.getDeparturesWithDelays(id, lines)));
+        const results = await Promise.all(
+          departuresFetchSelections.map(({ id, lines }) =>
+            mvvApi.getDeparturesWithDelays(id, lines),
+          ),
+        );
         if (!cancelled) {
           setDeparturesByStation(results);
           setLastUpdated(new Date());
@@ -61,7 +144,7 @@ function App() {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [savedSelections]);
+  }, [departuresFetchKey]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -75,7 +158,9 @@ function App() {
   );
 
   const removeSavedSelection = (id: string): void => {
-    const updatedSelections = savedSelections.filter((selection) => selection.id !== id);
+    const updatedSelections = savedSelections.filter(
+      (selection) => selection.id !== id,
+    );
     setSavedSelections(updatedSelections);
   };
 
@@ -93,7 +178,7 @@ function App() {
     openDialog(<SearchDialog initialSelection={selection} />, "Edit Route");
   };
 
-  const renderSavedSelections = (selections: SavedSelection[]): ReactNode => 
+  const renderSavedSelections = (selections: SavedSelection[]): ReactNode =>
     selections?.map((selection) => (
       <div key={selection.id}>
         <Badge
@@ -116,11 +201,11 @@ function App() {
       </div>
     ));
 
-  const groupDeparturesByLine = (departures: Departure[]): Array<{ id: string; departures: Departure[] }> => {
-    const lineMap = new Map<string, { id: string; departures: Departure[] }>();
+  const groupDeparturesByLine = (departures: Departure[]): DepartureGroup[] => {
+    const lineMap = new Map<string, DepartureGroup>();
 
     for (const departure of departures) {
-      const lineId = departure.line.stateless;
+      const lineId = getLineIdFromStateless(departure.line.stateless);
 
       if (!lineMap.has(lineId)) {
         lineMap.set(lineId, {
@@ -134,44 +219,111 @@ function App() {
     return Array.from(lineMap.values());
   };
 
-  const renderDepartures = ({ departureLive, departurePlanned, line: { number, direction } }: Departure) => {
+  const sortDepartureGroups = (
+    groups: DepartureGroup[],
+    lineOrder?: string[],
+  ): DepartureGroup[] => {
+    const baseSortedGroups = [...groups].sort((groupA, groupB) => {
+      const firstDepartureA = groupA.departures[0];
+      const firstDepartureB = groupB.departures[0];
+
+      const lineNumberComparison = firstDepartureA.line.number.localeCompare(
+        firstDepartureB.line.number,
+        undefined,
+        {
+          numeric: true,
+          sensitivity: "base",
+        },
+      );
+
+      if (lineNumberComparison !== 0) return lineNumberComparison;
+
+      return firstDepartureA.line.direction.localeCompare(
+        firstDepartureB.line.direction,
+        undefined,
+        {
+          sensitivity: "base",
+        },
+      );
+    });
+
+    if (!lineOrder?.length) return baseSortedGroups;
+
+    const lineOrderIndex = new Map(
+      lineOrder.map((lineId, index) => [lineId, index]),
+    );
+
+    return baseSortedGroups.sort((groupA, groupB) => {
+      const indexA = lineOrderIndex.get(groupA.id);
+      const indexB = lineOrderIndex.get(groupB.id);
+
+      if (indexA === undefined && indexB === undefined) return 0;
+      if (indexA === undefined) return 1;
+      if (indexB === undefined) return -1;
+      return indexA - indexB;
+    });
+  };
+
+  const renderDepartures = ({
+    departureLive,
+    departurePlanned,
+    line: { number, direction },
+  }: Departure) => {
     if (departureLive === "Halt entfällt") {
       return (
-        <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
+        <div
+          key={`${number}-${direction}-${departurePlanned}`}
+          className="flex items-center gap-3 font-mono text-sm"
+        >
           <span className="line-through text-gray-400">{departurePlanned}</span>
-          <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">{departureLive}</span>
+          <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">
+            {departureLive}
+          </span>
         </div>
       );
     }
 
-    const delay = departureLive ? calculateDelay(departurePlanned, departureLive) : null;
+    const delay = departureLive
+      ? calculateDelay(departurePlanned, departureLive)
+      : null;
     return (
-      <div key={`${number}-${direction}-${departurePlanned}`} className="flex items-center gap-3 font-mono text-sm">
-        {delay === null
-          ? (
-              <span className="text-green-700 font-semibold flex items-center gap-2">
-                {departurePlanned || "-"}
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">TBD</span>
-              </span>
-          ) : delay > 0
-            ? (
-              <>
-                <span className="line-through text-gray-400">{departurePlanned}</span>
-                <span className="text-red-600 font-semibold">{departureLive}</span>
-                <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">+{delay} min</span>
-              </>
-            ) : (
-              <span className="text-green-700 font-semibold flex items-center gap-2">
-                {departureLive}
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">On time</span>
-              </span>
-            )
-          }
+      <div
+        key={`${number}-${direction}-${departurePlanned}`}
+        className="flex items-center gap-3 font-mono text-sm"
+      >
+        {delay === null ? (
+          <span className="text-green-700 font-semibold flex items-center gap-2">
+            {departurePlanned || "-"}
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+              TBD
+            </span>
+          </span>
+        ) : delay > 0 ? (
+          <>
+            <span className="line-through text-gray-400">
+              {departurePlanned}
+            </span>
+            <span className="text-red-600 font-semibold">{departureLive}</span>
+            <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">
+              +{delay} min
+            </span>
+          </>
+        ) : (
+          <span className="text-green-700 font-semibold flex items-center gap-2">
+            {departureLive}
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
+              On time
+            </span>
+          </span>
+        )}
       </div>
     );
   };
 
-  const renderDepartureGroups = ({ id, departures }: { id: string; departures: Departure[] }): ReactNode => (
+  const renderDepartureGroups = ({
+    id,
+    departures,
+  }: DepartureGroup): ReactNode => (
     <div key={id}>
       <div className="text-gray-500 font-semibold mb-2">
         <span
@@ -188,12 +340,7 @@ function App() {
         </span>
       </div>
       <div className="flex flex-col gap-1 ml-0.5">
-        {departures
-          .values()
-          .map(renderDepartures)
-          .take(5)
-          .toArray()
-        }
+        {departures.values().map(renderDepartures).take(5).toArray()}
       </div>
     </div>
   );
@@ -201,18 +348,39 @@ function App() {
   const renderDeparturesByStation = (selections: SavedSelection[]): ReactNode =>
     selections.map((selection, index) => {
       const departures = departuresByStation[index] ?? [];
+      const departureGroups = sortDepartureGroups(
+        groupDeparturesByLine(departures),
+        selection.lineOrder,
+      );
 
       return (
         <SortableStationCard
           key={selection.id}
+          sortableId={`station:${selection.id}`}
           selection={selection}
           stationName={departures?.[0]?.station.name ?? selection.stop.name}
           isSortingEnabled={selections.length > 1}
         >
           {departures.length > 0 ? (
-            groupDeparturesByLine(departures).map((departureGroups) =>
-              renderDepartureGroups(departureGroups),
-            )
+            <SortableContext
+              items={departureGroups.map(
+                (group) => `line:${selection.id}:${group.id}`,
+              )}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="flex flex-col gap-3">
+                {departureGroups.map((group) => (
+                  <SortableDepartureGroup
+                    key={group.id}
+                    group={group}
+                    stationId={selection.id}
+                    isSortingEnabled={departureGroups.length > 1}
+                  >
+                    {renderDepartureGroups(group)}
+                  </SortableDepartureGroup>
+                ))}
+              </div>
+            </SortableContext>
           ) : (
             <p className="text-sm text-gray-500">Loading departures...</p>
           )}
@@ -223,11 +391,62 @@ function App() {
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
 
+    const activeData = active.data.current;
+    const activeType = activeData?.type;
+
+    if (activeType === "line-group") {
+      if (!activeData) return;
+
+      const stationId = activeData.stationId as string | undefined;
+      const activeLineId = activeData.lineId as string | undefined;
+      const overData = over.data.current;
+      const overStationId = overData?.stationId as string | undefined;
+      const overLineId = overData?.lineId as string | undefined;
+
+      if (
+        !stationId ||
+        stationId !== overStationId ||
+        !activeLineId ||
+        !overLineId
+      )
+        return;
+
+      const stationIndex = savedSelections.findIndex(
+        (selection) => selection.id === stationId,
+      );
+      if (stationIndex < 0) return;
+
+      const departures = departuresByStation[stationIndex] ?? [];
+      const orderedGroups = sortDepartureGroups(
+        groupDeparturesByLine(departures),
+        savedSelections[stationIndex].lineOrder,
+      );
+      const oldIndex = orderedGroups.findIndex(
+        (group) => group.id === activeLineId,
+      );
+      const newIndex = orderedGroups.findIndex(
+        (group) => group.id === overLineId,
+      );
+
+      if (oldIndex < 0 || newIndex < 0) return;
+
+      const nextLineOrder = arrayMove(orderedGroups, oldIndex, newIndex).map(
+        (group) => group.id,
+      );
+      const nextSelections = [...savedSelections];
+      nextSelections[stationIndex] = {
+        ...nextSelections[stationIndex],
+        lineOrder: nextLineOrder,
+      };
+      setSavedSelections(nextSelections);
+      return;
+    }
+
     const oldIndex = savedSelections.findIndex(
-      (selection) => selection.id === active.id,
+      (selection) => `station:${selection.id}` === active.id,
     );
     const newIndex = savedSelections.findIndex(
-      (selection) => selection.id === over.id,
+      (selection) => `station:${selection.id}` === over.id,
     );
 
     if (oldIndex < 0 || newIndex < 0) return;
@@ -261,7 +480,9 @@ function App() {
             <p className="text-sm text-gray-500 ml-3">Add a route to start</p>
           )}
           {savedSelections.length >= 3 && (
-            <p className="text-sm text-gray-500 ml-3">Maximum of 3 saved stops reached</p>
+            <p className="text-sm text-gray-500 ml-3">
+              Maximum of 3 saved stops reached
+            </p>
           )}
         </div>
         {lastUpdated && (
@@ -283,7 +504,7 @@ function App() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={savedSelections.map((selection) => selection.id)}
+          items={savedSelections.map((selection) => `station:${selection.id}`)}
           strategy={verticalListSortingStrategy}
         >
           <div className="flex flex-col gap-4">

@@ -5,7 +5,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { getLineColors } from "@/lib/line-colors";
 import { getLineIdFromStateless } from "@/lib/utils";
-import { type LineInfo, type LocationResult, mvvApi } from "@/services/mvv-service";
+import {
+  type LineInfo,
+  type LocationResult,
+  mvvApi,
+} from "@/services/mvv-service";
 import { useDialogStore } from "@/store/dialogStore";
 import { useSavedSelectionsStore } from "@/store/savedSelectionsStore";
 import type { SavedSelection, SaveLines } from "@/types/storage";
@@ -42,7 +46,9 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
         const res = await mvvApi.getAvailableLines(item.id);
         setAvailableLines(res.lines);
 
-        const foundSelection = savedSelections.find((selection) => selection.id === item?.id);
+        const foundSelection = savedSelections.find(
+          (selection) => selection.id === item?.id,
+        );
         if (!foundSelection) {
           setDialogTitle("Add New Route");
           setSelectedLines([]);
@@ -56,7 +62,7 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
             ? res.lines.map((line) => line.stateless)
             : foundSelection.lines,
         );
-      // Handle errors
+        // Handle errors
       } finally {
         setIsLoadingLines(false);
       }
@@ -92,7 +98,10 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
     setSelectedLines((prev) =>
       checked
         ? [...prev, lineId]
-        : prev.filter((id) => getLineIdFromStateless(id) !== getLineIdFromStateless(lineId))
+        : prev.filter(
+            (id) =>
+              getLineIdFromStateless(id) !== getLineIdFromStateless(lineId),
+          ),
     );
   };
 
@@ -134,7 +143,9 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
           ? "all"
           : selectedLines;
 
-      const idx = savedSelections.findIndex((stop) => stop.id === selectedStop.id);
+      const idx = savedSelections.findIndex(
+        (stop) => stop.id === selectedStop.id,
+      );
 
       const isSameLines = (linesA: SaveLines, linesB: SaveLines): boolean => {
         if (linesA === "all" && linesB === "all") return true;
@@ -151,10 +162,23 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
         const existingEntry = savedSelections[idx];
         if (isSameLines(existingEntry.lines, linesToSave)) return;
 
+        const selectedLineIds =
+          linesToSave === "all"
+            ? null
+            : new Set(
+                linesToSave.map((lineId) => getLineIdFromStateless(lineId)),
+              );
+        const nextLineOrder = existingEntry.lineOrder?.filter((lineId) =>
+          selectedLineIds
+            ? selectedLineIds.has(getLineIdFromStateless(lineId))
+            : true,
+        );
+
         // update entry
         const updated = {
           ...existingEntry,
           lines: linesToSave,
+          lineOrder: nextLineOrder?.length ? nextLineOrder : undefined,
           savedAt: new Date().toISOString(),
         } as const;
         const updatedSelections = [...savedSelections];
