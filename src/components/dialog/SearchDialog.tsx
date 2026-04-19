@@ -38,7 +38,7 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
   );
 
   const loadStopLines = useCallback(
-    async (item: LocationResult): Promise<void> => {
+    async (item: LocationResult) => {
       setSelectedStop(item);
       setIsLoadingLines(true);
 
@@ -70,14 +70,19 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
     [savedSelections, setDialogTitle],
   );
 
-  const handleStopSelect = async (item: LocationResult): Promise<void> => {
-    await loadStopLines(item);
-  };
+  const loadStopLinesSafely = useCallback(
+    (item: LocationResult) => {
+      loadStopLines(item).catch((error) => {
+        console.error("Failed to load stop lines", error);
+      });
+    },
+    [loadStopLines],
+  );
 
   useEffect(() => {
     if (!initialSelection) return;
-    void loadStopLines(initialSelection.stop);
-  }, [initialSelection, loadStopLines]);
+    loadStopLinesSafely(initialSelection.stop);
+  }, [initialSelection, loadStopLinesSafely]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -225,7 +230,7 @@ export function SearchDialog({ initialSelection }: SearchDialogProps) {
           fetchData={handleSearchStops}
           renderItem={(item) => item.name}
           getItemValue={(item) => item.name}
-          onSelect={handleStopSelect}
+          onSelect={loadStopLinesSafely}
         />
       )}
       <div>
