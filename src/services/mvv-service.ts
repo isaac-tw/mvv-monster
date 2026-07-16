@@ -256,8 +256,8 @@ export class MvvApiService {
    * Search for transit stops, stations, or street addresses
    */
   async searchStops(query: string): Promise<StopFinderResponse> {
-    const searchParams = new URLSearchParams({ name_origin: query });
-    const url = `${this.baseUrl}/stopFinder?${searchParams.toString()}`;
+    const searchParams = new URLSearchParams({ query });
+    const url = `/api/stop-finder?${searchParams.toString()}`;
 
     return this.fetchWithErrorHandling<StopFinderResponse>(url);
   }
