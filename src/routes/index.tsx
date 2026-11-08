@@ -6,6 +6,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock, Plus, RefreshCw } from "lucide-react";
 
+import { ConfigDialog } from "@/components/dialog/ConfigDialog";
 import { RemoveSavedSelectionDialog } from "@/components/dialog/RemoveSavedSelectionDialog";
 import { SearchDialog } from "@/components/dialog/SearchDialog";
 import { SavedSelectionBadges } from "@/components/SavedSelectionBadges";
@@ -55,7 +56,27 @@ function App() {
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold text-gray-900">Departures Today</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold text-gray-900">Departures Today</h1>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isLoading}
+          onClick={() => {
+            openDialog(
+              <ConfigDialog
+                onImport={(selections) => {
+                  setDeparturesByStation([]);
+                  setSavedSelections(selections);
+                }}
+              />,
+              "Import / Export Configuration",
+            );
+          }}
+        >
+          Import / Export
+        </Button>
+      </div>
       <div className="flex flex-wrap gap-2 my-4">
         <SavedSelectionBadges
           selections={savedSelections}
