@@ -13,9 +13,9 @@ A real-time departure tracking application for Munich's public transportation sy
 
 ## Importing and exporting your configuration
 
-Select **Import / Export** above the departure board, then **Export configuration** to download `mvv-monster-config.json`.
+Select **Import / Export** above the departure board, then **Export** to download `mvv-monster-config.json`.
 
-To restore it, choose the JSON file in the same dialog, review the listed stops, and select **Replace configuration**. Import replaces your current saved stops; export them first if you want a backup. An empty configuration clears all stops. Invalid files leave your current configuration unchanged. Files may contain up to three stops and must be smaller than 1 MB.
+To restore it, drop one JSON file into the import area or select **Choose file**, review the listed stops, and select **Import configuration**. Import replaces your current saved stops; export them first if you want a backup. An empty configuration clears all stops. Invalid files leave your current configuration unchanged. Files may contain up to three stops and be up to 1 MB.
 
 Configuration files use a versioned JSON envelope (`format: "mvv-monster"`, `version: 1`, `savedSelections`). They include saved stop details, line filters, and station/group order. Transfer the downloaded file yourself; import/export runs in your browser.
 
