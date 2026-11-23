@@ -2,7 +2,7 @@
 
 A real-time departure tracking application for Munich's public transportation system (MVV - Münchner Verkehrs- und Tarifverbund).
 
-**🚀 [https://mvv.monster/](https://mvv.monster/)**
+**🚀 [https://mvv.wiki/](https://mvv.wiki/)**
 
 ## Features
 
